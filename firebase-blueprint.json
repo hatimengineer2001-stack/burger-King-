@@ -1,0 +1,58 @@
+{
+  "entities": {
+    "MenuItem": {
+      "title": "Menu Item",
+      "description": "A food item in the Burger King menu.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "category": { "type": "string", "enum": ["Burgers", "Chicken", "Sides", "Drinks", "Desserts", "Vegan", "Kids"] },
+        "price": { "type": "number" },
+        "calories": { "type": "integer" },
+        "image": { "type": "string", "format": "uri" },
+        "description": { "type": "string" },
+        "popular": { "type": "boolean" }
+      },
+      "required": ["name", "category", "price", "calories", "image", "description"]
+    },
+    "Deal": {
+      "title": "Deal",
+      "description": "A promotional offer or coupon.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "code": { "type": "string" },
+        "expiry": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "description", "code", "expiry"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the application, potentially an admin.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "role": { "type": "string", "enum": ["admin", "user"] }
+      },
+      "required": ["uid", "email", "role"]
+    }
+  },
+  "firestore": {
+    "/menuItems/{itemId}": {
+      "schema": "MenuItem",
+      "description": "Collection of menu items."
+    },
+    "/deals/{dealId}": {
+      "schema": "Deal",
+      "description": "Collection of promotional deals."
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Collection of user profiles and roles."
+    }
+  }
+}

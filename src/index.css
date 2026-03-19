@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Bangers", system-ui, sans-serif;
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  
+  --color-bk-red: #D62300;
+  --color-bk-gold: #F5A623;
+  --color-bk-charcoal: #1A1A1A;
+  --color-bk-cream: #FFF8EE;
+}
+
+@layer base {
+  body {
+    @apply bg-bk-cream text-bk-charcoal font-sans;
+  }
+}
+
+.flame-gradient {
+  background: linear-gradient(to bottom, #D62300, #F5A623);
+}
+
+.ticker-wrap {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.ticker-move {
+  display: inline-block;
+  animation: ticker 30s linear infinite;
+}
+
+@keyframes ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}

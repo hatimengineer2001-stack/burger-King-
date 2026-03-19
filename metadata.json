@@ -1,0 +1,5 @@
+{
+  "name": "Burger King - Flame Grilled",
+  "description": "High-converting fast food experience with flame-grilled confidence.",
+  "requestFramePermissions": ["geolocation"]
+}

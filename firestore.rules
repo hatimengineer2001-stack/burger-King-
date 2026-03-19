@@ -1,0 +1,121 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: menuItems
+    // Document ID: itemId
+    // Fields:
+    //   - name: string (required, size < 100)
+    //   - category: string (required, in ['Burgers', 'Chicken', 'Sides', 'Drinks', 'Desserts', 'Vegan', 'Kids'])
+    //   - price: number (required, > 0)
+    //   - calories: number (required, >= 0)
+    //   - image: string (required, isValidUrl)
+    //   - description: string (required, size < 500)
+    //   - popular: bool (optional)
+    //
+    // Collection: deals
+    // Document ID: dealId
+    // Fields:
+    //   - title: string (required, size < 100)
+    //   - description: string (required, size < 500)
+    //   - code: string (required, size < 20)
+    //   - expiry: string (required, isValidDateString)
+    //
+    // Collection: users
+    // Document ID: userId
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required, isValidEmail)
+    //   - role: string (required, in ['admin', 'user'])
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "mridulhassan2014@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidDateString(dateStr) {
+      return dateStr is string && dateStr.matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.*Z?$");
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidMenuItem(data) {
+      return data.name is string && data.name.size() > 0 && data.name.size() < 100 &&
+             data.category in ['Burgers', 'Chicken', 'Sides', 'Drinks', 'Desserts', 'Vegan', 'Kids'] &&
+             data.price is number && data.price > 0 &&
+             data.calories is number && data.calories >= 0 &&
+             isValidUrl(data.image) &&
+             data.description is string && data.description.size() < 500;
+    }
+
+    function isValidDeal(data) {
+      return data.title is string && data.title.size() > 0 && data.title.size() < 100 &&
+             data.description is string && data.description.size() < 500 &&
+             data.code is string && data.code.size() > 0 && data.code.size() < 20 &&
+             isValidDateString(data.expiry);
+    }
+
+    function isValidUser(data) {
+      return data.uid is string &&
+             isValidEmail(data.email) &&
+             data.role in ['admin', 'user'];
+    }
+
+    // ===============================================================
+    // Match Rules
+    // ===============================================================
+
+    match /menuItems/{itemId} {
+      allow read: if true; // Publicly readable
+      allow create, update: if isAdmin() && isValidMenuItem(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /deals/{dealId} {
+      allow read: if true; // Publicly readable
+      allow create, update: if isAdmin() && isValidDeal(request.resource.data);
+      allow delete: if isAdmin();
+    }
+
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == 'user') || isAdmin());
+      allow update: if isAuthenticated() && isValidUser(request.resource.data) && 
+                    ((isOwner(userId) && request.resource.data.role == resource.data.role) || isAdmin());
+      allow delete: if isAdmin();
+    }
+  }
+}
